@@ -15,7 +15,7 @@ def main():
 
 def replace_urls(text):
     url_pattern = r'https?://\S+'
-    return re.sub(url_pattern, '[url]', text)
+    return re.sub(url_pattern, '[URL]', text)
 
 
 if __name__ == '__main__':
