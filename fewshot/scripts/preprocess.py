@@ -14,7 +14,7 @@ def main():
 
 
 def replace_urls(text):
-    url_pattern = r'https?://[^\s"]+'
+    url_pattern = r'https?://[^\s",]+'
     return re.sub(url_pattern, '[URL]', text)
 
 
