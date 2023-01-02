@@ -11,19 +11,19 @@ from transformers import (
     TrainingArguments,
 )
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 DEVICE = "cuda"
 MODEL = "xlm-roberta-large"
 
-isarcasm_data = pd.read_csv("data/isarcasm/preprocessed/train.csv")[:1800]
-isarcasm_data_ja = pd.read_csv("data/isarcasm/preprocessed/train_ja.csv")[:1800]
+isarcasm_data = pd.read_csv("data/isarcasm/preprocessed/train.csv")[:] #1800
+isarcasm_data_ja = pd.read_csv("data/isarcasm/preprocessed/train_ja.csv")[:]
 isarcasm_test_data = pd.read_csv("data/isarcasm/preprocessed/test.csv").sort_values(
     ["sarcastic"], ascending=False
 )[:400]
 isarcasm_test_data_ja = pd.read_csv(
     "data/isarcasm/preprocessed/test_ja.csv"
-).sort_values(["sarcastic"], ascending=False)[:400]
+).sort_values(["sarcastic"], ascending=False)[:] #400
 isarcasm_data = pd.concat([isarcasm_data, isarcasm_test_data])
 
 spirs_data = pd.read_csv("data/spirs/preprocessed/all.csv")
@@ -37,13 +37,19 @@ chin_data = pd.concat([chin_data, chin_data_ja])
 train_data = pd.concat([isarcasm_data, spirs_data, chin_data]).dropna()
 train_data = train_data.sample(frac=1).reset_index()
 
-eval_data = train_data[-1000:]
-train_data = train_data[:-1000]
+eval_data = train_data[-1500:]
+train_data = train_data[:-1500]
+
+print((train_data['sarcastic'] == 1).sum() / len(train_data['sarcastic']))
+print((eval_data['sarcastic'] == 1).sum() / len(eval_data['sarcastic']))
+# raise
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL, cache_dir="./cache")
 
 recall = evaluate.load("recall")
 prec = evaluate.load("precision")
+f_score = evaluate.load("f1")
+accuracy = evaluate.load("accuracy")
 
 
 def compute_metrics(eval_pred):
@@ -52,7 +58,9 @@ def compute_metrics(eval_pred):
     predictions = predictions >= 0.5
     r = recall.compute(predictions=predictions, references=labels)["recall"]
     p = prec.compute(predictions=predictions, references=labels)["precision"]
-    return {"precision": p, "recall": r}
+    f = f_score.compute(predictions=predictions, references=labels)["f1"]
+    a = accuracy.compute(predictions=predictions, references=labels)["accuracy"]
+    return {"precision": p, "recall": r, "f1": f, "accuracy" : a}
 
 
 class SarcasmDataset(torch.utils.data.Dataset):
@@ -84,16 +92,17 @@ model = AutoModelForSequenceClassification.from_pretrained(
 
 training_args = TrainingArguments(
     output_dir="./results",
-    num_train_epochs=10,
+    num_train_epochs=25,
     per_device_train_batch_size=16,
     per_device_eval_batch_size=64,
-    warmup_steps=50,
-    learning_rate=5e-6,
-    # weight_decay=0.001,
+    warmup_steps=2500,
+    learning_rate=1e-5,
+    weight_decay=0.0001,
     logging_dir="./logs",
     logging_steps=100,
     evaluation_strategy="epoch",
     fp16=True,
+    save_steps=5000,
     # deepspeed="supervised/ds-config.json"
 )
 
