@@ -12,6 +12,7 @@ from transformers import (
 )
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "5"
+np.random.seed(100)
 
 DEVICE = "cuda"
 MODEL = "xlm-roberta-large"
@@ -38,6 +39,7 @@ train_data = pd.concat([isarcasm_data, spirs_data, chin_data]).dropna()
 train_data = train_data.sample(frac=1).reset_index()
 
 eval_data = train_data[-1500:]
+eval_data.to_csv("data/evaluation/all.csv")
 train_data = train_data[:-1500]
 
 print((train_data['sarcastic'] == 1).sum() / len(train_data['sarcastic']))
@@ -91,7 +93,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
 ).to(DEVICE)
 
 training_args = TrainingArguments(
-    output_dir="./results",
+    output_dir="./checkpoints",
     num_train_epochs=25,
     per_device_train_batch_size=16,
     per_device_eval_batch_size=64,
@@ -103,6 +105,8 @@ training_args = TrainingArguments(
     evaluation_strategy="epoch",
     fp16=True,
     save_steps=5000,
+    seed= 100,
+    data_seed= 100,
     # deepspeed="supervised/ds-config.json"
 )
 
