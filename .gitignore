@@ -1,5 +1,5 @@
 cache
 .vscode
-logs
-results
+logs*
+results*
 data/sarc
