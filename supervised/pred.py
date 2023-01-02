@@ -1,34 +1,25 @@
 import os
 
-import evaluate
-import numpy as np
 import pandas as pd
-import torch
-from transformers import (
-    AutoModelForSequenceClassification,
-    AutoTokenizer,
-    Trainer,
-    TrainingArguments,
-)
+from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipeline
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "5"
 
 DEVICE = "cuda"
-MODEL = "results/checkpoint-28000"
+MODEL = "results/checkpoint-35000"
 
 tokenizer = AutoTokenizer.from_pretrained("xlm-roberta-large", cache_dir="./cache")
 model = AutoModelForSequenceClassification.from_pretrained(
     MODEL, num_labels=1, cache_dir="./cache"
 ).to(DEVICE)
 
-pred_data = pd.read_csv("data/prediction/all.csv", names=['text'], delimiter='▞')[:25]
+pred_data = pd.read_csv("data/prediction/all.csv", names=["text"], delimiter="▞")[:25]
 
+pipe = pipeline("text-classification", model=MODEL, tokenizer="xlm-roberta-large")
 
-from transformers import pipeline, AutoModelForTokenClassification, AutoTokenizer
+preds = pipe(pred_data["text"].tolist(), function_to_apply=None)
+preds = list(map(lambda x: 0 if x["score"] <= 0.5 else 1, preds))
 
-pipe = pipeline('text-classification', model=MODEL, tokenizer='xlm-roberta-large')
+pred_data["sarcastic"] = preds
 
-preds = pipe(pred_data['text'].tolist(), function_to_apply=None)
-preds = list(map(lambda x: x['score'],preds))
-
-print(preds)
+pred_data.to_csv("supervised_preds.csv")
