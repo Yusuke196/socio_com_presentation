@@ -34,13 +34,13 @@ def main():
                         model,
                         device,
                     )
-                    out_file.write(f'{line.rstrip()}\t{predict}\n')
+                    out_file.write(f"{line.rstrip()}\t{predict}\n")
 
                     pbar.update(1)
 
 
 def get_num_lines(path):
-    proc = subprocess.run(['wc', '-l', path], capture_output=True)
+    proc = subprocess.run(["wc", "-l", path], capture_output=True)
     res = int(proc.stdout.decode().split()[0])
     return res
 
@@ -58,7 +58,7 @@ def get_samples(x):
                 "answer": "Answer: 含まれない",
             },
             {
-                "tweet": 'Tweet: 一度もお会いしたことがない人たちが、僕がSNSに投稿した画像や言葉を好き勝手に使い、テレビなどの公共放送で言いたい放題言っているようで、誠にご苦労様です。皆様がそのようなことに時間と労力を使うお仕事をされている中、僕は皆様のお役に立つための未来を考える仕事をしています。',
+                "tweet": "Tweet: 一度もお会いしたことがない人たちが、僕がSNSに投稿した画像や言葉を好き勝手に使い、テレビなどの公共放送で言いたい放題言っているようで、誠にご苦労様です。皆様がそのようなことに時間と労力を使うお仕事をされている中、僕は皆様のお役に立つための未来を考える仕事をしています。",
                 "answer": "Answer: 含まれる",
             },
             {
@@ -82,12 +82,12 @@ def get_samples(x):
 
 
 def get_prompt(samples):
-    examples = [
+    paragraphs = [
         dct["tweet"] + "\n" + dct["answer"] for dct in samples["examples"]
     ]
-    examples.insert(0, samples["question"])
-    examples.append(samples["tweet"])
-    prompt = "\n\n".join(examples)
+    paragraphs.insert(0, samples["question"])
+    paragraphs.append(samples["tweet"])
+    prompt = "\n\n".join(paragraphs)
     return prompt
 
 
@@ -108,5 +108,5 @@ def get_logprobs(prompt, tokenizer, model, device):
     return logprobs
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
