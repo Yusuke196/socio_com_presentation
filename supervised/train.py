@@ -21,7 +21,7 @@ isarcasm_data = pd.read_csv("data/isarcasm/preprocessed/train.csv")[:] #1800
 isarcasm_data_ja = pd.read_csv("data/isarcasm/preprocessed/train_ja.csv")[:]
 isarcasm_test_data = pd.read_csv("data/isarcasm/preprocessed/test.csv").sort_values(
     ["sarcastic"], ascending=False
-)[:400]
+)[:] #400
 isarcasm_test_data_ja = pd.read_csv(
     "data/isarcasm/preprocessed/test_ja.csv"
 ).sort_values(["sarcastic"], ascending=False)[:] #400
@@ -39,12 +39,11 @@ train_data = pd.concat([isarcasm_data, spirs_data, chin_data]).dropna()
 train_data = train_data.sample(frac=1).reset_index()
 
 eval_data = train_data[-1500:]
-eval_data.to_csv("data/evaluation/all.csv")
+eval_data.to_csv("data/evaluation/all.csv", index=False)
 train_data = train_data[:-1500]
 
 print((train_data['sarcastic'] == 1).sum() / len(train_data['sarcastic']))
 print((eval_data['sarcastic'] == 1).sum() / len(eval_data['sarcastic']))
-# raise
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL, cache_dir="./cache")
 
