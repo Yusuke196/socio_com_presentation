@@ -28,8 +28,8 @@ def main():
                     samples = get_samples(x)
                     prompt = get_prompt(samples)
                     predict = eval(
-                        prompt + "\n" + samples["choice1"],
-                        prompt + "\n" + samples["choice2"],
+                        prompt + samples["choice1"],
+                        prompt + samples["choice2"],
                         tokenizer,
                         model,
                         device,
@@ -92,6 +92,8 @@ def get_prompt(samples):
 
 
 def eval(prompt1, prompt2, tokenizer, model, device):
+    # print(prompt1)
+    # print(prompt2)
     lprob1 = get_logprobs(prompt1, tokenizer, model, device).sum()
     lprob2 = get_logprobs(prompt2, tokenizer, model, device).sum()
     return 0 if lprob1 > lprob2 else 1
@@ -100,7 +102,8 @@ def eval(prompt1, prompt2, tokenizer, model, device):
 def get_logprobs(prompt, tokenizer, model, device):
     inputs = tokenizer(prompt, return_tensors="pt").to(device)
     input_ids, output_ids = inputs["input_ids"], inputs["input_ids"][:, 1:]
-    outputs = model(**inputs, labels=input_ids)
+    with torch.no_grad():
+        outputs = model(**inputs, labels=input_ids)
     logits = outputs.logits
     logprobs = torch.gather(
         F.log_softmax(logits, dim=2), 2, output_ids.unsqueeze(2)
